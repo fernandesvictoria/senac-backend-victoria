@@ -2,6 +2,8 @@ package model.entity;
 
 import java.time.LocalDate;
 
+import model.entity.enums.Categoria;
+
 public class Pessoa {
 
 	private int id;
@@ -9,9 +11,9 @@ public class Pessoa {
 	private LocalDate dataNascimento;
 	private String sexo;
 	private String cpf;
-	private String tipo;
+	private Categoria tipo;
 
-	public Pessoa(int id, String nome, LocalDate dataNascimento, String sexo, String cpf, String tipo) {
+	public Pessoa(int id, String nome, LocalDate dataNascimento, String sexo, String cpf, Categoria tipo) {
 		super();
 		this.id = id;
 		this.nome = nome;
@@ -66,11 +68,11 @@ public class Pessoa {
 		this.cpf = cpf;
 	}
 
-	public String getTipo() {
+	public Categoria getTipo() {
 		return tipo;
 	}
 
-	public void setTipo(String tipo) {
+	public void setTipo(Categoria tipo) {
 		this.tipo = tipo;
 	}
 

@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import model.entity.Pessoa;
+import model.entity.enums.Categoria;
 
 public class PessoaRepository {
 
@@ -28,7 +29,7 @@ public class PessoaRepository {
 			pstmt.setDate(2, Date.valueOf(pessoa.getDataNascimento()));
 			pstmt.setString(3, pessoa.getSexo());
 			pstmt.setString(4, pessoa.getCpf());
-			pstmt.setString(5, pessoa.getTipo());
+			pstmt.setString(5, pessoa.getTipo().toString());
 			pstmt.execute();
 			ResultSet resultado = pstmt.getGeneratedKeys();
 			if (resultado.next()) {
@@ -44,7 +45,7 @@ public class PessoaRepository {
 		return pessoa;
 	}
 
-	private boolean cpfExiste(String cpf) {
+	public boolean cpfExiste(String cpf) {
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = null;
 		ResultSet resultado = null;
@@ -87,6 +88,73 @@ public class PessoaRepository {
 		return excluiu;
 	}
 
+//ARRUMAR
+	
+	
+	
+	public boolean alterar(Pessoa novaPessoa) {
+		if (novaPessoa.getCpf() == null) {
+			System.out.println("Erro: CPF não pode ser nulo.");
+			return false;
+		} else if (cpfExiste(novaPessoa.getCpf())) {
+			System.out.println("Erro: CPF duplicado.");
+			return false;
+		}
+		boolean alterou = false;
+
+		String query = " UPDATE pessoa " + " SET   nome=?, data_nascimento=?, sexo=?, " + "       cpf=?, tipo_pessoa=? "
+				+ " WHERE idpessoa=?";
+		Connection conn = Banco.getConnection();
+		PreparedStatement pstmt = Banco.getPreparedStatement(conn, query);
+		try {
+
+			pstmt.setString(1, novaPessoa.getNome());
+			pstmt.setDate(2, Date.valueOf(novaPessoa.getDataNascimento()));
+			pstmt.setString(3, novaPessoa.getSexo());
+			pstmt.setString(4, novaPessoa.getCpf());
+			pstmt.setString(5, novaPessoa.getTipo().toString());
+			pstmt.setInt(6, novaPessoa.getId());
+
+			alterou = pstmt.executeUpdate() > 0;
+		} catch (SQLException erro) {
+			System.out.println("Erro ao atualizar pessoa");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeStatement(pstmt);
+			Banco.closeConnection(conn);
+		}
+		return alterou;
+	}
+
+	public Pessoa consultarPorId(int id) {
+		Connection conn = Banco.getConnection();
+		Statement stmt = Banco.getStatement(conn);
+
+		ResultSet resultado = null;
+		Pessoa pessoa = new Pessoa();
+		String query = " SELECT * FROM pessoa WHERE idPESSOA = " + id;
+
+		try {
+			resultado = stmt.executeQuery(query);
+			if (resultado.next()) {
+				pessoa.setNome(resultado.getString("NOME"));
+				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
+				pessoa.setSexo(resultado.getString("SEXO"));
+				pessoa.setCpf(resultado.getString("cpf"));
+				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
+
+			}
+		} catch (SQLException erro) {
+			System.out.println("Erro ao executar consultar PESSOA com id (" + id + ")");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+		return pessoa;
+	}
+
 	public ArrayList<Pessoa> consultarTodasPessoas() {
 
 		ArrayList<Pessoa> pessoas = new ArrayList<>();
@@ -104,7 +172,8 @@ public class PessoaRepository {
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
-				pessoa.setTipo(resultado.getString("tipo_pessoa"));
+				pessoa.setCpf(resultado.getString("cpf"));
+				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
 				pessoas.add(pessoa);
 			}
 		} catch (SQLException erro) {
