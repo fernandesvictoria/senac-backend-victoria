@@ -33,11 +33,13 @@ public class PessoaController {
 		return service.excluirPessoa(id);
 	}
 	
+	
+	
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public boolean atualizar(Pessoa pessoaEditada){
-		 return service.atualizar(pessoaEditada);
+	@Produces(MediaType.TEXT_PLAIN)
+	public boolean alterar(Pessoa PessoaEditada)  {
+		return service.alterar(PessoaEditada);
 	}
 
 	@GET

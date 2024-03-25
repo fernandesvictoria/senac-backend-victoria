@@ -31,7 +31,7 @@ public class VacinaController {
 	public boolean excluir(@PathParam("id") int id) {
 		return service.excluirVacina(id);
 	}
-
+//
 //	@PUT
 //	@Consumes(MediaType.APPLICATION_JSON)
 //	@Produces(MediaType.APPLICATION_JSON)

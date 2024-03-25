@@ -12,7 +12,7 @@ import model.entity.enums.Categoria;
 
 public class PessoaRepository {
 
-	public Pessoa cadastrarPessoa(Pessoa pessoa) {
+	public Pessoa salvar(Pessoa pessoa) {
 		if (pessoa.getCpf() == null) {
 			System.out.println("Erro: CPF não pode ser nulo.");
 			return null;
@@ -21,7 +21,7 @@ public class PessoaRepository {
 			return null;
 		}
 
-		String query = "INSERT INTO pessoa (nome, data_nascimento, sexo, cpf, tipo_pessoa) VALUES (?, ?, ?, ?, ?)";
+		String query = "INSERT INTO pessoa (nome, data_nascimento, sexo, cpf, tipo_pessoa,idpais) VALUES (?, ?, ?, ?, ?,?)";
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = Banco.getPreparedStatementWithPk(conn, query);
 		try {
@@ -30,6 +30,7 @@ public class PessoaRepository {
 			pstmt.setString(3, pessoa.getSexo());
 			pstmt.setString(4, pessoa.getCpf());
 			pstmt.setString(5, pessoa.getTipo().toString());
+			pstmt.setInt(6, pessoa.getPais().getId());
 			pstmt.execute();
 			ResultSet resultado = pstmt.getGeneratedKeys();
 			if (resultado.next()) {
@@ -69,7 +70,7 @@ public class PessoaRepository {
 		return false;
 	}
 
-	public boolean excluirPessoa(int id) {
+	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
 		boolean excluiu = false;
@@ -88,22 +89,14 @@ public class PessoaRepository {
 		return excluiu;
 	}
 
-//ARRUMAR
-	
-	
-	
+
+
 	public boolean alterar(Pessoa novaPessoa) {
-		if (novaPessoa.getCpf() == null) {
-			System.out.println("Erro: CPF não pode ser nulo.");
-			return false;
-		} else if (cpfExiste(novaPessoa.getCpf())) {
-			System.out.println("Erro: CPF duplicado.");
-			return false;
-		}
+
 		boolean alterou = false;
 
-		String query = " UPDATE pessoa " + " SET   nome=?, data_nascimento=?, sexo=?, " + "       cpf=?, tipo_pessoa=? "
-				+ " WHERE idpessoa=?";
+		String query = " UPDATE pessoa " + " SET   nome=?, data_nascimento=?, sexo=?, "
+				+ "       cpf=?, tipo_pessoa=?,idpais=? " + " WHERE idpessoa=?";
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = Banco.getPreparedStatement(conn, query);
 		try {
@@ -113,7 +106,8 @@ public class PessoaRepository {
 			pstmt.setString(3, novaPessoa.getSexo());
 			pstmt.setString(4, novaPessoa.getCpf());
 			pstmt.setString(5, novaPessoa.getTipo().toString());
-			pstmt.setInt(6, novaPessoa.getId());
+			pstmt.setInt(6, novaPessoa.getPais().getId());
+			pstmt.setInt(7, novaPessoa.getId());
 
 			alterou = pstmt.executeUpdate() > 0;
 		} catch (SQLException erro) {
@@ -137,12 +131,16 @@ public class PessoaRepository {
 		try {
 			resultado = stmt.executeQuery(query);
 			if (resultado.next()) {
+				pessoa.setId(id);
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
 				pessoa.setCpf(resultado.getString("cpf"));
 				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
-
+				
+				PaisRepository paisRepository = new PaisRepository();
+				pessoa.setPais(paisRepository.consultarPorId(Integer.parseInt(resultado.getString("idpais"))));
+				//pessoa.setAplicacaoVacina();
 			}
 		} catch (SQLException erro) {
 			System.out.println("Erro ao executar consultar PESSOA com id (" + id + ")");
@@ -155,7 +153,7 @@ public class PessoaRepository {
 		return pessoa;
 	}
 
-	public ArrayList<Pessoa> consultarTodasPessoas() {
+	public ArrayList<Pessoa> consultarTodos() {
 
 		ArrayList<Pessoa> pessoas = new ArrayList<>();
 		Connection conn = Banco.getConnection();
@@ -169,11 +167,15 @@ public class PessoaRepository {
 			while (resultado.next()) {
 				Pessoa pessoa = new Pessoa();
 
+				pessoa.setId(resultado.getInt("IDPESSOA"));;
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
 				pessoa.setCpf(resultado.getString("cpf"));
 				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
+				PaisRepository paisRepository = new PaisRepository();
+				pessoa.setPais(paisRepository.consultarPorId(Integer.parseInt(resultado.getString("idpais"))));
+				//pessoa.setAplicacaoVacina();
 				pessoas.add(pessoa);
 			}
 		} catch (SQLException erro) {

@@ -11,23 +11,22 @@ public class PessoaService {
 
 	public Pessoa cadastrarPessoa(Pessoa novaPessoa) {
 		
-		return repository.cadastrarPessoa(novaPessoa);
+		return repository.salvar(novaPessoa);
 	}
 
 	public boolean excluirPessoa(int id) {
 
-		return repository.excluirPessoa(id);
+		return repository.excluir(id);
 	}
 	
-	public boolean atualizar(Pessoa PessoaEditada) {
+	public boolean alterar(Pessoa PessoaEditada) {
 		return repository.alterar(PessoaEditada);
 	}
 
 	public ArrayList<Pessoa> consultarTodasPessoas() {
-		return repository.consultarTodasPessoas();
+		return repository.consultarTodos();
 	}
 	
-
 	public Pessoa consultarPorId(int id) {
 		return repository.consultarPorId(id);
 	}
