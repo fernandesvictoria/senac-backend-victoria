@@ -14,8 +14,8 @@ import model.entity.Vacina;
 import model.entity.enums.Categoria;
 import model.entity.enums.Estagio;
 
-public class VacinaRepository {
-
+public class VacinaRepository implements BaseRepository<Vacina> {
+	@Override
 	public Vacina salvar(Vacina novaVacina) {
 
 		String query = "INSERT INTO vacina (NOME,idpais, IDPESQUISADOR, ESTAGIO, DATA_INICIO_PESQUISA) VALUES ( ?, ?, ?, ?,?)";
@@ -44,6 +44,38 @@ public class VacinaRepository {
 		return novaVacina;
 	}
 
+	
+	public boolean pessoaRecebeuVacina(int idVacina) {
+	    Connection conn = Banco.getConnection();
+	    PreparedStatement stmt = null;
+	    ResultSet resultado = null;
+	    boolean vacinaAplicada = false;
+
+	    try {
+	        String query = "SELECT COUNT(*) FROM aplicacao_vacina WHERE idvacina = ?";
+	        stmt = conn.prepareStatement(query);
+	        stmt.setInt(1, idVacina);
+	        resultado = stmt.executeQuery();
+
+	        if (resultado.next()) {
+	            int quantidadeDoses = resultado.getInt(1);
+	            if (quantidadeDoses > 0) {
+	                vacinaAplicada = true;
+	            }
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("Erro ao verificar se a vacina ja foi aplicada.");
+	        e.printStackTrace();
+	    } finally {
+	        Banco.closeResultSet(resultado);
+	        Banco.closeStatement(stmt);
+	        Banco.closeConnection(conn);
+	    }
+
+	    return vacinaAplicada;
+	}
+	
+	@Override
 	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -63,7 +95,35 @@ public class VacinaRepository {
 		return excluiu;
 	}
 
-	
+	@Override
+	public boolean alterar(Vacina vacinaEditada) {
+		boolean alterou = false;
+		String query = " UPDATE vacina "
+				+ " SET idpesquisador=?, nome=?, idpais=?, estagio=?, data_inicio_pesquisa=? "
+				+ " WHERE id=? ";
+		Connection conn = Banco.getConnection();
+		PreparedStatement stmt = Banco.getPreparedStatementWithPk(conn, query);
+		try {
+			stmt.setInt(1, vacinaEditada.getPesquisadorResponsavel().getId());
+			stmt.setString(2, vacinaEditada.getNome());
+			stmt.setInt(3, vacinaEditada.getPais().getId());
+			stmt.setString(4, vacinaEditada.getEstagio().toString());
+			stmt.setDate(5, Date.valueOf(vacinaEditada.getDataInicioPesquisa()));
+			stmt.setInt(6, vacinaEditada.getId());
+
+			stmt.setInt(6, vacinaEditada.getId());
+			alterou = stmt.executeUpdate() > 0;
+		} catch (SQLException erro) {
+			System.out.println("Erro ao atualizar vacina");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+		return alterou;
+	}
+
+	@Override
 	public ArrayList<Vacina> consultarTodos() {
 		ArrayList<Vacina> vacinas = new ArrayList<>();
 		Connection conn = Banco.getConnection();
@@ -133,6 +193,7 @@ public class VacinaRepository {
 		return pesquisador;
 	}
 
+	@Override
 	public Vacina consultarPorId(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -173,5 +234,23 @@ public class VacinaRepository {
 		}
 		return vacina;
 	}
+
+
+	 public void atualizarMediaAvaliacoes(int idVacina, double mediaAvaliacoes) {
+	        String sql = "UPDATE vacina SET media = ? WHERE idvacina = ?";
+	        Connection conexao = Banco.getConnection();
+	        PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
+
+	        try {
+	            stmt.setDouble(1, mediaAvaliacoes);
+	            stmt.setInt(2, idVacina);
+	            stmt.executeUpdate();
+	        } catch (SQLException e) {
+	            System.out.println("Erro ao atualizar média de avaliações para a vacina com id " + idVacina);
+	            System.out.println("Erro: " + e.getMessage());
+	        } finally {
+	            Banco.closeConnection(conexao);
+	        }
+	    }
 
 }

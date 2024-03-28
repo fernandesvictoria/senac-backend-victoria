@@ -38,6 +38,28 @@ public class AplicacaoRepository {
 		return novaVacinacao;
 	}
 
+	
+	public double calcularMediaAvaliacoesPorVacina(int idVacina) {
+	    String sql = "SELECT AVG(avaliacao) AS media_avaliacoes FROM aplicacao_vacina WHERE idvacina = ?";
+	    Connection conexao = Banco.getConnection();
+	    PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
+	    double media = 0;
+
+	    try {
+	        stmt.setInt(1, idVacina);
+	        ResultSet resultado = stmt.executeQuery();
+	        if (resultado.next()) {
+	            media = resultado.getDouble("media_avaliacoes");
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("Erro ao calcular média das avaliações para a vacina com id " + idVacina);
+	        System.out.println("Erro: " + e.getMessage());
+	    }
+
+	    return media;
+	}
+	
+	
 	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -194,4 +216,9 @@ public class AplicacaoRepository {
 		return aplicacoes;
 	}
 
+
+ 
+
+	
+	
 }

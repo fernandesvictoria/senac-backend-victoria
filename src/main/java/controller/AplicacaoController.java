@@ -3,6 +3,7 @@ package controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import exception.ControleVacinasException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -24,7 +25,7 @@ public class AplicacaoController {
 	@Path("/salvar")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Aplicacao cadastrar(Aplicacao novaAplicacao) {
+	public Aplicacao cadastrar(Aplicacao novaAplicacao) throws ControleVacinasException {
 		return service.cadastrarAplicacao(novaAplicacao);
 	}
 
@@ -37,7 +38,7 @@ public class AplicacaoController {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	public boolean alterar(Aplicacao AplicacaoEditada) {
+	public boolean alterar(Aplicacao AplicacaoEditada) throws ControleVacinasException {
 		return service.alterar(AplicacaoEditada);
 	}
 

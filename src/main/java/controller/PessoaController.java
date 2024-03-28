@@ -2,6 +2,7 @@ package controller;
 
 import java.util.List;
 
+import exception.ControleVacinasException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -23,13 +24,13 @@ public class PessoaController {
 	@Path("/salvar")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Pessoa cadastrar(Pessoa novaPessoa) {
-		return service.cadastrarPessoa(novaPessoa);
+	public Pessoa cadastrar(Pessoa novaPessoa) throws ControleVacinasException {
+		return service.cadastrarPessoa(novaPessoa) ;
 	}
 
 	@DELETE
 	@Path("/{id}")
-	public boolean excluir(@PathParam("id") int id) {
+	public boolean excluir(@PathParam("id") int id) throws ControleVacinasException {
 		return service.excluirPessoa(id);
 	}
 	
@@ -38,7 +39,7 @@ public class PessoaController {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
-	public boolean alterar(Pessoa PessoaEditada)  {
+	public boolean alterar(Pessoa PessoaEditada) throws ControleVacinasException {
 		return service.alterar(PessoaEditada);
 	}
 

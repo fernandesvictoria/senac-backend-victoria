@@ -10,16 +10,17 @@ import java.util.ArrayList;
 import model.entity.Pessoa;
 import model.entity.enums.Categoria;
 
-public class PessoaRepository {
+public class PessoaRepository implements BaseRepository<Pessoa> {
 
+	@Override
 	public Pessoa salvar(Pessoa pessoa) {
-		if (pessoa.getCpf() == null) {
-			System.out.println("Erro: CPF não pode ser nulo.");
-			return null;
-		} else if (cpfExiste(pessoa.getCpf())) {
-			System.out.println("Erro: CPF duplicado.");
-			return null;
-		}
+//		if (pessoa.getCpf() == null) {
+//			System.out.println("Erro: CPF não pode ser nulo.");
+//			return null;
+//		} else if (cpfExiste(pessoa.getCpf())) {
+//			System.out.println("Erro: CPF duplicado.");
+//			return null;
+//		}
 
 		String query = "INSERT INTO pessoa (nome, data_nascimento, sexo, cpf, tipo_pessoa,idpais) VALUES (?, ?, ?, ?, ?,?)";
 		Connection conn = Banco.getConnection();
@@ -70,6 +71,7 @@ public class PessoaRepository {
 		return false;
 	}
 
+	@Override
 	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -89,8 +91,37 @@ public class PessoaRepository {
 		return excluiu;
 	}
 
+	public boolean pessoaRecebeuVacina(int idPessoa) {
+	    Connection conn = Banco.getConnection();
+	    PreparedStatement stmt = null;
+	    ResultSet resultado = null;
+	    boolean recebeuVacina = false;
 
+	    try {
+	        String query = "SELECT COUNT(*) FROM aplicacao_vacina WHERE idpessoa = ?";
+	        stmt = conn.prepareStatement(query);
+	        stmt.setInt(1, idPessoa);
+	        resultado = stmt.executeQuery();
 
+	        if (resultado.next()) {
+	            int quantidadeDoses = resultado.getInt(1);
+	            if (quantidadeDoses > 0) {
+	                recebeuVacina = true;
+	            }
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("Erro ao verificar se a pessoa recebeu vacina.");
+	        e.printStackTrace();
+	    } finally {
+	        Banco.closeResultSet(resultado);
+	        Banco.closeStatement(stmt);
+	        Banco.closeConnection(conn);
+	    }
+
+	    return recebeuVacina;
+	}
+	
+	@Override
 	public boolean alterar(Pessoa novaPessoa) {
 
 		boolean alterou = false;
@@ -120,6 +151,7 @@ public class PessoaRepository {
 		return alterou;
 	}
 
+	@Override
 	public Pessoa consultarPorId(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -137,10 +169,10 @@ public class PessoaRepository {
 				pessoa.setSexo(resultado.getString("SEXO"));
 				pessoa.setCpf(resultado.getString("cpf"));
 				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
-				
+
 				PaisRepository paisRepository = new PaisRepository();
 				pessoa.setPais(paisRepository.consultarPorId(Integer.parseInt(resultado.getString("idpais"))));
-				//pessoa.setAplicacaoVacina();
+				// pessoa.setAplicacaoVacina();
 			}
 		} catch (SQLException erro) {
 			System.out.println("Erro ao executar consultar PESSOA com id (" + id + ")");
@@ -153,6 +185,7 @@ public class PessoaRepository {
 		return pessoa;
 	}
 
+	@Override
 	public ArrayList<Pessoa> consultarTodos() {
 
 		ArrayList<Pessoa> pessoas = new ArrayList<>();
@@ -167,7 +200,8 @@ public class PessoaRepository {
 			while (resultado.next()) {
 				Pessoa pessoa = new Pessoa();
 
-				pessoa.setId(resultado.getInt("IDPESSOA"));;
+				pessoa.setId(resultado.getInt("IDPESSOA"));
+				;
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
@@ -175,7 +209,7 @@ public class PessoaRepository {
 				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
 				PaisRepository paisRepository = new PaisRepository();
 				pessoa.setPais(paisRepository.consultarPorId(Integer.parseInt(resultado.getString("idpais"))));
-				//pessoa.setAplicacaoVacina();
+				// pessoa.setAplicacaoVacina();
 				pessoas.add(pessoa);
 			}
 		} catch (SQLException erro) {
