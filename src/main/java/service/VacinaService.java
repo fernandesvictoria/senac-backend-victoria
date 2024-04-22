@@ -1,8 +1,5 @@
 package service;
 
-
-
-
 import java.util.ArrayList;
 
 import exception.ControleVacinasException;
@@ -10,18 +7,19 @@ import model.entity.Pessoa;
 import model.entity.Vacina;
 import model.entity.enums.Categoria;
 import model.repository.VacinaRepository;
+import model.seletor.VacinaSeletor;
 
 public class VacinaService {
 
 	private VacinaRepository repository = new VacinaRepository();
 
 	public Vacina salvarVacina(Vacina novaVacina) {
-	    if (verificarPesquisador(novaVacina.getPesquisadorResponsavel())) {
-	        return repository.salvar(novaVacina);
-	    } else {
-	        System.out.println("Pessoa informada não é PESQUISADOR");
-	    }
-	    return null;
+		if (verificarPesquisador(novaVacina.getPesquisadorResponsavel())) {
+			return repository.salvar(novaVacina);
+		} else {
+			System.out.println("Pessoa informada não é PESQUISADOR");
+		}
+		return null;
 	}
 
 	public boolean excluirVacina(int id) throws ControleVacinasException {
@@ -30,7 +28,7 @@ public class VacinaService {
 		}
 		return repository.excluir(id);
 	}
-	
+
 	public boolean alterar(Vacina vacinaEditada) {
 		return repository.alterar(vacinaEditada);
 	}
@@ -42,8 +40,12 @@ public class VacinaService {
 	public Vacina consultarPorId(int id) {
 		return repository.consultarPorId(id);
 	}
-	
+
 	private boolean verificarPesquisador(Pessoa pessoa) {
-	    return pessoa.getTipo() == Categoria.PESQUISADOR;
+		return pessoa.getTipo() == Categoria.PESQUISADOR;
+	}
+
+	public ArrayList<Vacina> consultarComFiltro(VacinaSeletor seletor) {
+		return repository.consultarComSeletor(seletor);
 	}
 }

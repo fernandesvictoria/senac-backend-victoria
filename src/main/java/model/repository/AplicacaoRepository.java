@@ -39,25 +39,7 @@ public class AplicacaoRepository {
 	}
 
 	
-	public double calcularMediaAvaliacoesPorVacina(int idVacina) {
-	    String sql = "SELECT AVG(avaliacao) AS media_avaliacoes FROM aplicacao_vacina WHERE idvacina = ?";
-	    Connection conexao = Banco.getConnection();
-	    PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
-	    double media = 0;
-
-	    try {
-	        stmt.setInt(1, idVacina);
-	        ResultSet resultado = stmt.executeQuery();
-	        if (resultado.next()) {
-	            media = resultado.getDouble("media_avaliacoes");
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("Erro ao calcular média das avaliações para a vacina com id " + idVacina);
-	        System.out.println("Erro: " + e.getMessage());
-	    }
-
-	    return media;
-	}
+	
 	
 	
 	public boolean excluir(int id) {
@@ -126,6 +108,7 @@ public class AplicacaoRepository {
 
 				// Consultar a vacina pelo ID
 				int idVacina = resultado.getInt("idvacina");
+				
 				Vacina vacina = vacinaRepository.consultarPorId(idVacina);
 				aplicacao.setVacina(vacina);
 				aplicacao.setData(resultado.getDate("DATA_APLICACAO").toLocalDate());
@@ -217,7 +200,26 @@ public class AplicacaoRepository {
 	}
 
 
- 
+	public double calcularMediaAvaliacoesPorVacina(int idVacina) {
+	    String sql = "SELECT AVG(AVALIACAO)as media FROM APLICACAO_VACINA WHERE IDVACINA = ?;";
+	    Connection conexao = Banco.getConnection();
+	    PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
+	    double media = 0;
+
+	    try {
+	        stmt.setInt(1, idVacina);
+	        ResultSet resultado = stmt.executeQuery();
+	        if (resultado.next()) {
+	            media = resultado.getDouble("media");
+	            System.out.println("media metodo calcular"+media);
+	        }
+	    } catch (SQLException e) {
+	        System.out.println("Erro ao calcular média das avaliações para a vacina com id " + idVacina);
+	        System.out.println("Erro: " + e.getMessage());
+	    }
+
+	    return media;
+	}
 
 	
 	

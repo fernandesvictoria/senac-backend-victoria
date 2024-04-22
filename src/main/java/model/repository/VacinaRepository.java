@@ -13,12 +13,13 @@ import model.entity.Pessoa;
 import model.entity.Vacina;
 import model.entity.enums.Categoria;
 import model.entity.enums.Estagio;
+import model.seletor.VacinaSeletor;
 
 public class VacinaRepository implements BaseRepository<Vacina> {
 	@Override
 	public Vacina salvar(Vacina novaVacina) {
 
-		String query = "INSERT INTO vacina (NOME,idpais, IDPESQUISADOR, ESTAGIO, DATA_INICIO_PESQUISA) VALUES ( ?, ?, ?, ?,?)";
+		String query = "INSERT INTO vacina (NOME,idpais, IDPESQUISADOR, ESTAGIO, DATA_INICIO_PESQUISA, MEDIA) VALUES (?, ?, ?, ?, ?,?)";
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = Banco.getPreparedStatementWithPk(conn, query);
 		try {
@@ -27,6 +28,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			pstmt.setInt(3, novaVacina.getPesquisadorResponsavel().getId());
 			pstmt.setString(4, novaVacina.getEstagio().toString());
 			pstmt.setDate(5, Date.valueOf(novaVacina.getDataInicioPesquisa()));
+			pstmt.setDouble(5, novaVacina.getMedia());
 			pstmt.execute();
 			ResultSet resultado = pstmt.getGeneratedKeys();
 
@@ -44,37 +46,36 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 		return novaVacina;
 	}
 
-	
 	public boolean pessoaRecebeuVacina(int idVacina) {
-	    Connection conn = Banco.getConnection();
-	    PreparedStatement stmt = null;
-	    ResultSet resultado = null;
-	    boolean vacinaAplicada = false;
+		Connection conn = Banco.getConnection();
+		PreparedStatement stmt = null;
+		ResultSet resultado = null;
+		boolean vacinaAplicada = false;
 
-	    try {
-	        String query = "SELECT COUNT(*) FROM aplicacao_vacina WHERE idvacina = ?";
-	        stmt = conn.prepareStatement(query);
-	        stmt.setInt(1, idVacina);
-	        resultado = stmt.executeQuery();
+		try {
+			String query = "SELECT COUNT(*) FROM aplicacao_vacina WHERE idvacina = ?";
+			stmt = conn.prepareStatement(query);
+			stmt.setInt(1, idVacina);
+			resultado = stmt.executeQuery();
 
-	        if (resultado.next()) {
-	            int quantidadeDoses = resultado.getInt(1);
-	            if (quantidadeDoses > 0) {
-	                vacinaAplicada = true;
-	            }
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("Erro ao verificar se a vacina ja foi aplicada.");
-	        e.printStackTrace();
-	    } finally {
-	        Banco.closeResultSet(resultado);
-	        Banco.closeStatement(stmt);
-	        Banco.closeConnection(conn);
-	    }
+			if (resultado.next()) {
+				int quantidadeDoses = resultado.getInt(1);
+				if (quantidadeDoses > 0) {
+					vacinaAplicada = true;
+				}
+			}
+		} catch (SQLException e) {
+			System.out.println("Erro ao verificar se a vacina ja foi aplicada.");
+			e.printStackTrace();
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
 
-	    return vacinaAplicada;
+		return vacinaAplicada;
 	}
-	
+
 	@Override
 	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
@@ -99,8 +100,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 	public boolean alterar(Vacina vacinaEditada) {
 		boolean alterou = false;
 		String query = " UPDATE vacina "
-				+ " SET idpesquisador=?, nome=?, idpais=?, estagio=?, data_inicio_pesquisa=? "
-				+ " WHERE id=? ";
+				+ " SET idpesquisador=?, nome=?, idpais=?, estagio=?, data_inicio_pesquisa=?,media=? " + " WHERE id=? ";
 		Connection conn = Banco.getConnection();
 		PreparedStatement stmt = Banco.getPreparedStatementWithPk(conn, query);
 		try {
@@ -109,6 +109,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			stmt.setInt(3, vacinaEditada.getPais().getId());
 			stmt.setString(4, vacinaEditada.getEstagio().toString());
 			stmt.setDate(5, Date.valueOf(vacinaEditada.getDataInicioPesquisa()));
+			stmt.setDouble(6, vacinaEditada.getMedia());
 			stmt.setInt(6, vacinaEditada.getId());
 
 			stmt.setInt(6, vacinaEditada.getId());
@@ -146,6 +147,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 				vacina.setPesquisadorResponsavel(vacinaRepository.buscarPesquisadorPorID(idPesquisador));
 				vacina.setEstagio(Estagio.valueOf(resultado.getString("estagio").toUpperCase()));
 				vacina.setDataInicioPesquisa(resultado.getDate("DATA_INICIO_PESQUISA").toLocalDate());
+				vacina.setMedia(resultado.getDouble("MEDIA"));
 				vacinas.add(vacina);
 			}
 		} catch (SQLException erro) {
@@ -235,22 +237,98 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 		return vacina;
 	}
 
+	public void atualizarMediaAvaliacoes(int idVacina, double mediaAvaliacoes) {
+		String sql = "UPDATE vacina SET media = ? WHERE idvacina = ?";
+		Connection conexao = Banco.getConnection();
+		PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
 
-	 public void atualizarMediaAvaliacoes(int idVacina, double mediaAvaliacoes) {
-	        String sql = "UPDATE vacina SET media = ? WHERE idvacina = ?";
-	        Connection conexao = Banco.getConnection();
-	        PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
+		try {
+			stmt.setDouble(1, mediaAvaliacoes);
+			stmt.setInt(2, idVacina);
+			stmt.executeUpdate();
+		} catch (SQLException e) {
+			System.out.println("Erro ao atualizar média de avaliações para a vacina com id " + idVacina);
+			System.out.println("Erro: " + e.getMessage());
+		} finally {
+			Banco.closeConnection(conexao);
+		}
+	}
 
-	        try {
-	            stmt.setDouble(1, mediaAvaliacoes);
-	            stmt.setInt(2, idVacina);
-	            stmt.executeUpdate();
-	        } catch (SQLException e) {
-	            System.out.println("Erro ao atualizar média de avaliações para a vacina com id " + idVacina);
-	            System.out.println("Erro: " + e.getMessage());
-	        } finally {
-	            Banco.closeConnection(conexao);
-	        }
-	    }
+	public ArrayList<Vacina> consultarComSeletor(VacinaSeletor seletor) {
+		ArrayList<Vacina> vacinas = new ArrayList<>();
+		Connection conn = Banco.getConnection();
+		Statement stmt = Banco.getStatement(conn);
+
+		ResultSet resultado = null;
+		String sql = "SELECT * FROM VACINA";
+
+		if (seletor.temFiltro()) {
+			sql = preencherFiltros(seletor, sql);
+		}
+		if (seletor.temPaginacao()) {
+			sql += "LIMIT" + seletor.getLimite() + "OFFSET" + seletor.getOffset();
+		}
+
+		try {
+			resultado = stmt.executeQuery(sql);
+			while (resultado.next()) {
+				Vacina vacina = construirDoResultSet(resultado);
+				vacinas.add(vacina);
+			}
+		} catch (SQLException erro) {
+			System.out.println("Erro ao consultar vacinas com seletor");
+			System.out.println("Erro:" + erro.getMessage());
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+
+		return vacinas;
+	}
+
+	private String preencherFiltros(VacinaSeletor seletor, String sql) {
+		// pelo menos um filtro
+		sql += " WHERE ";
+		boolean primeiro = true;
+
+		if (seletor.getNome() != null && seletor.getNome().trim().length() > 0) {
+			if (!primeiro) {
+				sql += " AND ";
+			}
+			sql += " v.nome LIKE '%" + seletor.getNome() + "%'";
+			primeiro = false;
+		}
+		if (seletor.getPais().getNome() != null && seletor.getPais().getNome().trim().length() > 0) {
+			if (!primeiro) {
+				sql += " AND ";
+			}
+			sql += " p.nome LIKE '%" + seletor.getNome() + "%' ";
+			primeiro = false;
+		}
+
+		if (seletor.getPesquisadorResponsavel().getNome() != null
+				&& seletor.getPesquisadorResponsavel().getNome().trim().length() > 0) {
+			if (!primeiro) {
+				sql += " AND ";
+			}
+			sql += " r.nome LIKE '%" + seletor.getNome() + "%' ";
+			primeiro = false;
+		}
+		return sql;
+	}
+
+	private Vacina construirDoResultSet(ResultSet resultado) throws SQLException {
+		Vacina v = new Vacina();
+		v.setId(resultado.getInt("IDVACINA"));
+		v.setNome(resultado.getString("nome"));
+		v.setEstagio(Estagio.valueOf(resultado.getString("estagio")));
+		PaisRepository paisRepository = new PaisRepository();
+		v.setPais(paisRepository.consultarPorId(resultado.getInt("IDPAIS")));
+		PessoaRepository pessoaRepository = new PessoaRepository();
+		v.setPesquisadorResponsavel(pessoaRepository.consultarPorId(resultado.getInt("IDPESSOA")));
+
+		return v;
+	}
 
 }

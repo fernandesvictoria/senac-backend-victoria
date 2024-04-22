@@ -34,30 +34,25 @@ public class AplicacaoService {
 			novaAplicacao.setAvaliacao(NOTA_MAXIMA);
 		}
 
-		if (!podeReceberVacina(novaAplicacao)) {
-			throw new ControleVacinasException("A pessoa não pode receber esta vacina no estágio atual.");
-		}
-
 		double mediaAvaliacoes = repository.calcularMediaAvaliacoesPorVacina(novaAplicacao.getVacina().getId());
 		repositoryVacina.atualizarMediaAvaliacoes(novaAplicacao.getVacina().getId(), mediaAvaliacoes);
-
+		System.out.println("media service" + mediaAvaliacoes);
+		System.out.println("idvacina" + novaAplicacao.getVacina().getId());
+		
 		return repository.salvar(novaAplicacao);
+	}
+
+	public boolean alterar(Aplicacao aplicacaoEditada) throws ControleVacinasException {
+		System.out.println(aplicacaoEditada.getVacina().getId());
+		double mediaAvaliacoes = repository.calcularMediaAvaliacoesPorVacina(aplicacaoEditada.getVacina().getId());
+		repositoryVacina.atualizarMediaAvaliacoes(aplicacaoEditada.getVacina().getId(), mediaAvaliacoes);
+
+		return repository.alterar(aplicacaoEditada);
 	}
 
 	public boolean excluir(int id) {
 
 		return repository.excluir(id);
-	}
-
-	public boolean alterar(Aplicacao aplicacaoEditada) throws ControleVacinasException {
-
-		double mediaAvaliacoes = repository.calcularMediaAvaliacoesPorVacina(aplicacaoEditada.getVacina().getId());
-		repositoryVacina.atualizarMediaAvaliacoes(aplicacaoEditada.getVacina().getId(), mediaAvaliacoes);
-		if (!podeReceberVacina(aplicacaoEditada)) {
-			throw new ControleVacinasException("A pessoa não pode receber esta vacina no estágio atual.");
-		}
-
-		return repository.alterar(aplicacaoEditada);
 	}
 
 	public ArrayList<Aplicacao> consultarTodasAplicacoes() {
@@ -73,18 +68,4 @@ public class AplicacaoService {
 		return repository.consultarPorIdPessoa(id);
 	}
 
-	private boolean podeReceberVacina(Aplicacao novaAplicacao) {
-		Vacina vacina = novaAplicacao.getVacina();
-		PessoaRepository repository = new PessoaRepository();
-		Pessoa pessoa = repository.consultarPorId(novaAplicacao.getId());
-
-		if (vacina.getEstagio() == Estagio.INICIAL && pessoa.getTipo() != Categoria.PESQUISADOR) {
-			return false;
-		}
-		if (vacina.getEstagio() == Estagio.TESTE && pessoa.getTipo() != Categoria.PESQUISADOR
-				&& pessoa.getTipo() != Categoria.VOLUNTARIO) {
-			return false;
-		}
-		return true;
-	}
 }

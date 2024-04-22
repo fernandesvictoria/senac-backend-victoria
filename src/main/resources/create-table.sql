@@ -261,14 +261,13 @@ VALUES
 
 
 select * from pais;
-
-
-SELECT * FROM PESSOA;
-
-SELECT * FROM APLICACAO_VACINA;
-select * from pais where sigla = 'BR';
 select * from vacina;
+SELECT * FROM PESSOA;
+SELECT * FROM APLICACAO_VACINA;
 
+select * from pais where sigla = 'BR';
+
+alter table vacina add column MEDIA DOUBLE;
 
 
 
