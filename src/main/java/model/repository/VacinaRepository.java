@@ -28,7 +28,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			pstmt.setInt(3, novaVacina.getPesquisadorResponsavel().getId());
 			pstmt.setString(4, novaVacina.getEstagio().toString());
 			pstmt.setDate(5, Date.valueOf(novaVacina.getDataInicioPesquisa()));
-			pstmt.setDouble(5, novaVacina.getMedia());
+			pstmt.setDouble(6, verificarMedia(novaVacina.getMedia()));
 			pstmt.execute();
 			ResultSet resultado = pstmt.getGeneratedKeys();
 
@@ -44,6 +44,45 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 		}
 
 		return novaVacina;
+	}
+//	
+//	public Vacina salvar(Vacina novaVacina) {
+//	    String query = "INSERT INTO vacina (NOME, idpais, IDPESQUISADOR, ESTAGIO, DATA_INICIO_PESQUISA, MEDIA) VALUES (?, ?, ?, ?, ?, ?)";
+//	    Connection conn = null;
+//	    PreparedStatement pstmt = null;
+//	    try {
+//	        conn = Banco.getConnection();
+//	        pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+//	        pstmt.setString(1, novaVacina.getNome());
+//	        pstmt.setInt(2, novaVacina.getPais().getId());
+//	        pstmt.setInt(3, novaVacina.getPesquisadorResponsavel().getId());
+//	        pstmt.setString(4, novaVacina.getEstagio().toString());
+//	        pstmt.setDate(5, Date.valueOf(novaVacina.getDataInicioPesquisa()));
+//	        
+//	        // Define a média com um valor padrão de 0.0 se for nula
+//	        Double media = obterMedia(novaVacina.getMedia());
+//	        pstmt.setDouble(6, media);
+//	        
+//	        pstmt.executeUpdate();
+//	        ResultSet resultado = pstmt.getGeneratedKeys();
+//	        
+//	        if (resultado.next()) {
+//	            novaVacina.setId(resultado.getInt(1));
+//	        }
+//	    } catch (SQLException erro) {
+//	        System.out.println("Erro ao executar a query do método salvar Vacina!");
+//	        System.out.println("Erro: " + erro.getMessage());
+//	    } finally {
+//	        Banco.closeResultSet(resultado);
+//	        Banco.closeStatement(pstmt);
+//	        Banco.closeConnection(conn);
+//	    }
+//	    return novaVacina;
+//	}
+
+	// Método separado para obter a média, retornando um valor padrão de 0.0 se for nula
+	private Double verificarMedia(Double media) {
+	    return media != null ? media : 0.0;
 	}
 
 	public boolean pessoaRecebeuVacina(int idVacina) {
@@ -253,82 +292,67 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			Banco.closeConnection(conexao);
 		}
 	}
-
-	public ArrayList<Vacina> consultarComSeletor(VacinaSeletor seletor) {
+	public ArrayList<Vacina> consultarComFiltro(VacinaSeletor seletor) {
 		ArrayList<Vacina> vacinas = new ArrayList<>();
+
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
 
 		ResultSet resultado = null;
-		String sql = "SELECT * FROM VACINA";
+		String query = " select v.* from vacina v " 
+					+ "	inner join pais p on p.IDPAIS = v.IDPAIS "
+					+ "	inner join pessoa pe on pe.IDPESSOA  = v.IDPESQUISADOR ";
 
-		if (seletor.temFiltro()) {
-			sql = preencherFiltros(seletor, sql);
+		boolean primeiro = true;
+
+		if (seletor.getNome() != null && seletor.getNome().trim().length()>0) {
+			if (primeiro) {
+				query += " WHERE ";
+			} else {
+				query += " AND ";
+			}
+			query += " UPPER(v.nome) LIKE UPPER('%" + seletor.getNome() + "%') ";
+			primeiro = false;
 		}
-		if (seletor.temPaginacao()) {
-			sql += "LIMIT" + seletor.getLimite() + "OFFSET" + seletor.getOffset();
+		
+		if(seletor.getNomePais() != null && seletor.getNomePais().trim().length()>0) {
+			if (primeiro) {
+				query += " WHERE ";
+			} else {
+				query += " AND ";
+			}
+			query += " UPPER(p.nome) LIKE UPPER('%" + seletor.getNomePais() + "%') ";
+			primeiro = false;
+
 		}
 
 		try {
-			resultado = stmt.executeQuery(sql);
+			resultado = stmt.executeQuery(query);
 			while (resultado.next()) {
-				Vacina vacina = construirDoResultSet(resultado);
+				Vacina vacina = new Vacina();
+				VacinaRepository vacinaRepository = new VacinaRepository();
+				PaisRepository paisRepository = new PaisRepository();
+
+				vacina.setId(resultado.getInt("IDVACINA"));
+				vacina.setNome(resultado.getString("NOME"));
+				vacina.setPais(paisRepository.consultarPorId(resultado.getInt("IDPAIS")));
+				vacina.setPesquisadorResponsavel(
+						vacinaRepository.buscarPesquisadorPorID(resultado.getInt("IDPESQUISADOR")));
+				vacina.setEstagio(Estagio.valueOf(resultado.getString("ESTAGIO").toUpperCase()));
+				vacina.setDataInicioPesquisa(resultado.getDate("DATA_INICIO_PESQUISA").toLocalDate());
+				vacina.setMedia(resultado.getDouble("MEDIA"));
+
 				vacinas.add(vacina);
 			}
 		} catch (SQLException erro) {
-			System.out.println("Erro ao consultar vacinas com seletor");
-			System.out.println("Erro:" + erro.getMessage());
+			System.out.println("Erro ao executar consultar com filtro");
+			System.out.println("Erro: " + erro.getMessage());
 		} finally {
 			Banco.closeResultSet(resultado);
 			Banco.closeStatement(stmt);
 			Banco.closeConnection(conn);
 		}
-
 		return vacinas;
-	}
-
-	private String preencherFiltros(VacinaSeletor seletor, String sql) {
-		// pelo menos um filtro
-		sql += " WHERE ";
-		boolean primeiro = true;
-
-		if (seletor.getNome() != null && seletor.getNome().trim().length() > 0) {
-			if (!primeiro) {
-				sql += " AND ";
-			}
-			sql += " v.nome LIKE '%" + seletor.getNome() + "%'";
-			primeiro = false;
-		}
-		if (seletor.getPais().getNome() != null && seletor.getPais().getNome().trim().length() > 0) {
-			if (!primeiro) {
-				sql += " AND ";
-			}
-			sql += " p.nome LIKE '%" + seletor.getNome() + "%' ";
-			primeiro = false;
-		}
-
-		if (seletor.getPesquisadorResponsavel().getNome() != null
-				&& seletor.getPesquisadorResponsavel().getNome().trim().length() > 0) {
-			if (!primeiro) {
-				sql += " AND ";
-			}
-			sql += " r.nome LIKE '%" + seletor.getNome() + "%' ";
-			primeiro = false;
-		}
-		return sql;
-	}
-
-	private Vacina construirDoResultSet(ResultSet resultado) throws SQLException {
-		Vacina v = new Vacina();
-		v.setId(resultado.getInt("IDVACINA"));
-		v.setNome(resultado.getString("nome"));
-		v.setEstagio(Estagio.valueOf(resultado.getString("estagio")));
-		PaisRepository paisRepository = new PaisRepository();
-		v.setPais(paisRepository.consultarPorId(resultado.getInt("IDPAIS")));
-		PessoaRepository pessoaRepository = new PessoaRepository();
-		v.setPesquisadorResponsavel(pessoaRepository.consultarPorId(resultado.getInt("IDPESSOA")));
-
-		return v;
 	}
 
 }

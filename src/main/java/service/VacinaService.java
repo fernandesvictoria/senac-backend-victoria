@@ -46,6 +46,6 @@ public class VacinaService {
 	}
 
 	public ArrayList<Vacina> consultarComFiltro(VacinaSeletor seletor) {
-		return repository.consultarComSeletor(seletor);
+		return repository.consultarComFiltro(seletor);
 	}
 }

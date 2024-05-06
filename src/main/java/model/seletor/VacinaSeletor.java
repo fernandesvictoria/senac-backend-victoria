@@ -1,34 +1,17 @@
 package model.seletor;
 
-import model.entity.Pais;
-import model.entity.Pessoa;
-import model.entity.enums.Estagio;
-
 public class VacinaSeletor extends BaseSeletor {
 
 	private String nome;
-	private Pais pais;
-	private Pessoa pesquisadorResponsavel;
-	private Estagio estagio;
+	private String nomePais;
+	private String pesquisadorResponsavel;
+	private String estagio;
 
 	public boolean temFiltro() {
 		return (this.nome != null && this.nome.trim().length() > 0) 
-				|| (this.pais.getNome() != null)
-				|| (this.pesquisadorResponsavel.getNome() != null) 
+				|| (this.getNomePais() != null)
+				|| (this.getPesquisadorResponsavel() != null) 
 				|| (this.estagio != null);
-	}
-
-	public VacinaSeletor(String nome, Pais pais, Pessoa pesquisadorResponsavel, Estagio estagio) {
-		super();
-		this.nome = nome;
-		this.pais = pais;
-		this.pesquisadorResponsavel = pesquisadorResponsavel;
-		this.estagio = estagio;
-	}
-
-	public VacinaSeletor() {
-		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public String getNome() {
@@ -39,28 +22,30 @@ public class VacinaSeletor extends BaseSeletor {
 		this.nome = nome;
 	}
 
-	public Pais getPais() {
-		return pais;
+	public String getNomePais() {
+		return nomePais;
 	}
 
-	public void setPais(Pais pais) {
-		this.pais = pais;
+	public void setNomePais(String nomePais) {
+		this.nomePais = nomePais;
 	}
 
-	public Pessoa getPesquisadorResponsavel() {
+	public String getPesquisadorResponsavel() {
 		return pesquisadorResponsavel;
 	}
 
-	public void setPesquisadorResponsavel(Pessoa pesquisadorResponsavel) {
+	public void setPesquisadorResponsavel(String pesquisadorResponsavel) {
 		this.pesquisadorResponsavel = pesquisadorResponsavel;
 	}
 
-	public Estagio getEstagio() {
+	public String getEstagio() {
 		return estagio;
 	}
 
-	public void setEstagio(Estagio estagio) {
+	public void setEstagio(String estagio) {
 		this.estagio = estagio;
 	}
+
+	
 
 }

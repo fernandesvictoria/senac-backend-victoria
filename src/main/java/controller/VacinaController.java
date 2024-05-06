@@ -54,7 +54,7 @@ public class VacinaController {
 	}
 
 	@POST
-	@Path("/filtro")
+	@Path("/filtrar")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Vacina> consultarComFiltro(VacinaSeletor seletor) {

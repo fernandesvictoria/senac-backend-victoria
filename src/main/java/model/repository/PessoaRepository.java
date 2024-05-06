@@ -200,8 +200,7 @@ public class PessoaRepository implements BaseRepository<Pessoa> {
 			while (resultado.next()) {
 				Pessoa pessoa = new Pessoa();
 
-				pessoa.setId(resultado.getInt("IDPESSOA"));
-				;
+				pessoa.setId(resultado.getInt("idpessao"));
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
@@ -222,5 +221,39 @@ public class PessoaRepository implements BaseRepository<Pessoa> {
 		}
 		return pessoas;
 	}
+	
+	public ArrayList<Pessoa> consultarPesquisadores() {
 
+		ArrayList<Pessoa> pessoas = new ArrayList<>();
+		Connection conn = Banco.getConnection();
+		Statement stmt = Banco.getStatement(conn);
+
+		ResultSet resultado = null;
+		String query = "SELECT * FROM pessoa p WHERE p.tipo_pessoa = 'PESQUISADOR';";
+
+		try {
+			resultado = stmt.executeQuery(query);
+			while (resultado.next()) {
+				Pessoa pessoa = new Pessoa();
+
+				pessoa.setId(resultado.getInt("IDPESSOA"));
+				pessoa.setNome(resultado.getString("NOME"));
+				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
+				pessoa.setSexo(resultado.getString("SEXO"));
+				pessoa.setCpf(resultado.getString("cpf"));
+				pessoa.setTipo(Categoria.valueOf(resultado.getString("tipo_pessoa").toUpperCase()));
+				PaisRepository paisRepository = new PaisRepository();
+				pessoa.setPais(paisRepository.consultarPorId(Integer.parseInt(resultado.getString("idpais"))));
+				pessoas.add(pessoa);
+			}
+		} catch (SQLException erro) {
+			System.out.println("Erro ao executar consultar todos pesquisadores");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+		return pessoas;
+	}
 }

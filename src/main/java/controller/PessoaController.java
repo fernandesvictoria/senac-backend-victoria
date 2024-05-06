@@ -50,6 +50,12 @@ public class PessoaController {
 	}
 	
 	@GET
+	@Path("/pesquisadores")
+	public List<Pessoa> consultarPesquisadores() {
+		return service.consultarPesquisadores();
+	}
+	
+	@GET
 	@Path("/{id}")
 	public Pessoa consultarPorId(@PathParam("id") int id){
 		 return service.consultarPorId(id);

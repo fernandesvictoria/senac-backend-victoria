@@ -5,10 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import model.entity.Pais;
-
-
 
 public class PaisRepository {
 
@@ -34,7 +33,7 @@ public class PaisRepository {
 		}
 		return novoPais;
 	}
-	
+
 	public Pais consultarPorId(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -48,7 +47,7 @@ public class PaisRepository {
 			if (resultado.next()) {
 				pais.setId(id);
 				pais.setNome(resultado.getString("NOME"));
-				pais.setSigla(resultado.getString("SIGLA"));	
+				pais.setSigla(resultado.getString("SIGLA"));
 
 			}
 		} catch (SQLException erro) {
@@ -60,5 +59,35 @@ public class PaisRepository {
 			Banco.closeConnection(conn);
 		}
 		return pais;
+	}
+
+	public ArrayList<Pais> consultarTodosPais() {
+
+		ArrayList<Pais> paises = new ArrayList<>();
+		Connection conn = Banco.getConnection();
+		Statement stmt = Banco.getStatement(conn);
+
+		ResultSet resultado = null;
+		String query = " SELECT * FROM pais";
+
+		try {
+			resultado = stmt.executeQuery(query);
+			while (resultado.next()) {
+				Pais pais = new Pais();
+
+				pais.setId(resultado.getInt("idpais"));
+				pais.setNome(resultado.getString("NOME"));
+				pais.setSigla(resultado.getString("sigla"));
+				paises.add(pais);
+			}
+		} catch (SQLException erro) {
+			System.out.println("Erro ao executar consultar todos PAISES");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+		return paises;
 	}
 }

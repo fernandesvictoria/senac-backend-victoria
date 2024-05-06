@@ -47,9 +47,9 @@ public class PessoaService {
 	public boolean excluirPessoa(int id) throws ControleVacinasException {
 		if (repository.pessoaRecebeuVacina(id)) {
 			throw new ControleVacinasException("Não é possível excluir pessoa pois já recebeu uma dose de vacina.");
-	        
-	    }
-		
+
+		}
+
 		return repository.excluir(id);
 	}
 
@@ -64,6 +64,10 @@ public class PessoaService {
 
 	public Pessoa consultarPorId(int id) {
 		return repository.consultarPorId(id);
+	}
+
+	public ArrayList<Pessoa> consultarPesquisadores() {
+		return repository.consultarPesquisadores();
 	}
 
 }
