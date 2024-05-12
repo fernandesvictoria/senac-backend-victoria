@@ -56,7 +56,7 @@ public class PessoaController {
 	}
 	
 	@GET
-	@Path("/{id}")
+	@Path("consultar/{id}")
 	public Pessoa consultarPorId(@PathParam("id") int id){
 		 return service.consultarPorId(id);
 	}

@@ -48,4 +48,12 @@ public class VacinaService {
 	public ArrayList<Vacina> consultarComFiltro(VacinaSeletor seletor) {
 		return repository.consultarComFiltro(seletor);
 	}
+	
+	public int contarPaginas(VacinaSeletor seletor) {
+		return repository.contarPagina(seletor);
+	}
+	
+	public int contarTotalRegistros(VacinaSeletor seletor) {
+		return repository.contarTotalRegistros(seletor);
+	}
 }

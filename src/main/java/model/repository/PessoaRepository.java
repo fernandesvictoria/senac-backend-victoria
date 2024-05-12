@@ -200,7 +200,7 @@ public class PessoaRepository implements BaseRepository<Pessoa> {
 			while (resultado.next()) {
 				Pessoa pessoa = new Pessoa();
 
-				pessoa.setId(resultado.getInt("idpessao"));
+				pessoa.setId(resultado.getInt("idpessoa"));
 				pessoa.setNome(resultado.getString("NOME"));
 				pessoa.setDataNascimento(resultado.getDate("DATA_NASCIMENTO").toLocalDate());
 				pessoa.setSexo(resultado.getString("SEXO"));
@@ -212,7 +212,7 @@ public class PessoaRepository implements BaseRepository<Pessoa> {
 				pessoas.add(pessoa);
 			}
 		} catch (SQLException erro) {
-			System.out.println("Erro ao executar consultar todas as Pessoas");
+			System.out.println("Erro ao executar consultar todas as Pessoasq");
 			System.out.println("Erro: " + erro.getMessage());
 		} finally {
 			Banco.closeResultSet(resultado);

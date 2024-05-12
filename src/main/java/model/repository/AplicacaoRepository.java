@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import model.entity.Aplicacao;
+import model.entity.Pessoa;
 import model.entity.Vacina;
 
 public class AplicacaoRepository {
@@ -19,11 +20,13 @@ public class AplicacaoRepository {
 		PreparedStatement stmt = Banco.getPreparedStatementWithPk(conexao, sql);
 
 		try {
-			stmt.setInt(1, novaVacinacao.getIdpessoa());
+			stmt.setInt(1, novaVacinacao.getPessoa().getId());
+			System.out.println(novaVacinacao.getPessoa().getId());
+
 			stmt.setInt(2, novaVacinacao.getVacina().getId());
 			stmt.setDate(3, Date.valueOf(novaVacinacao.getData()));
 			stmt.setInt(4, novaVacinacao.getAvaliacao());
-			
+
 			stmt.execute();
 
 			ResultSet resultado = stmt.getGeneratedKeys();
@@ -38,10 +41,6 @@ public class AplicacaoRepository {
 		return novaVacinacao;
 	}
 
-	
-	
-	
-	
 	public boolean excluir(int id) {
 		Connection conn = Banco.getConnection();
 		Statement stmt = Banco.getStatement(conn);
@@ -67,13 +66,13 @@ public class AplicacaoRepository {
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = Banco.getPreparedStatement(conn, query);
 		try {
-			
-			pstmt.setInt(1, aplicacaoEditada.getIdpessoa());
+
+			pstmt.setInt(1, aplicacaoEditada.getPessoa().getId());
 			pstmt.setInt(2, aplicacaoEditada.getVacina().getId());
 			pstmt.setDate(3, Date.valueOf(aplicacaoEditada.getData()));
 			pstmt.setInt(4, aplicacaoEditada.getAvaliacao());
 			pstmt.setInt(5, aplicacaoEditada.getId());
- 
+
 			alterou = pstmt.executeUpdate() > 0;
 		} catch (SQLException erro) {
 			System.out.println("Erro ao atualizar aplicação.");
@@ -101,14 +100,17 @@ public class AplicacaoRepository {
 			if (resultado.next()) {
 				aplicacao = new Aplicacao();
 				aplicacao.setId(resultado.getInt("IDAPLICACAO_VACINA"));
-				aplicacao.setIdpessoa(resultado.getInt("idpessoa"));
+
+				PessoaRepository pessoaRepository = new PessoaRepository();
+				Pessoa pessoa = pessoaRepository.consultarPorId(resultado.getInt("IDPESSOA"));
+				aplicacao.setPessoa(pessoa);
 
 				// instância de VacinaRepository pq método não é static
 				VacinaRepository vacinaRepository = new VacinaRepository();
 
 				// Consultar a vacina pelo ID
 				int idVacina = resultado.getInt("idvacina");
-				
+
 				Vacina vacina = vacinaRepository.consultarPorId(idVacina);
 				aplicacao.setVacina(vacina);
 				aplicacao.setData(resultado.getDate("DATA_APLICACAO").toLocalDate());
@@ -165,27 +167,31 @@ public class AplicacaoRepository {
 		Connection conn = Banco.getConnection();
 		PreparedStatement pstmt = null;
 		ResultSet resultado = null;
- 
+
 		String query = "SELECT * FROM APLICACAO_VACINA WHERE idpessoa = ?";
- 
+
 		try {
 			pstmt = conn.prepareStatement(query);
 			pstmt.setInt(1, idPessoa);
 			resultado = pstmt.executeQuery();
- 
+
 			while (resultado.next()) {
 				Aplicacao aplicacao = new Aplicacao();
 				aplicacao.setId(resultado.getInt("IDAPLICACAO_VACINA"));
-				aplicacao.setIdpessoa(resultado.getInt("idpessoa"));
- 
+
+				// instancia de pessoa
+				PessoaRepository pessoaRepository = new PessoaRepository();
+				Pessoa pessoa = pessoaRepository.consultarPorId(resultado.getInt("IDPESSOA"));
+				aplicacao.setPessoa(pessoa);
+
 				VacinaRepository vacinaRepository = new VacinaRepository();
- 
+
 				int idVacina = resultado.getInt("idvacina");
 				Vacina vacina = vacinaRepository.consultarPorId(idVacina);
 				aplicacao.setVacina(vacina);
 				aplicacao.setData(resultado.getDate("DATA_APLICACAO").toLocalDate());
 				aplicacao.setAvaliacao(resultado.getInt("avaliacao"));
- 
+
 				aplicacoes.add(aplicacao);
 			}
 		} catch (SQLException erro) {
@@ -199,28 +205,25 @@ public class AplicacaoRepository {
 		return aplicacoes;
 	}
 
-
 	public double calcularMediaAvaliacoesPorVacina(int idVacina) {
-	    String sql = "SELECT AVG(AVALIACAO)as media FROM APLICACAO_VACINA WHERE IDVACINA = ?;";
-	    Connection conexao = Banco.getConnection();
-	    PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
-	    double media = 0;
+		String sql = "SELECT AVG(AVALIACAO)as media FROM APLICACAO_VACINA WHERE IDVACINA = ?;";
+		Connection conexao = Banco.getConnection();
+		PreparedStatement stmt = Banco.getPreparedStatement(conexao, sql);
+		double media = 0;
 
-	    try {
-	        stmt.setInt(1, idVacina);
-	        ResultSet resultado = stmt.executeQuery();
-	        if (resultado.next()) {
-	            media = resultado.getDouble("media");
-	            System.out.println("media metodo calcular"+media);
-	        }
-	    } catch (SQLException e) {
-	        System.out.println("Erro ao calcular média das avaliações para a vacina com id " + idVacina);
-	        System.out.println("Erro: " + e.getMessage());
-	    }
+		try {
+			stmt.setInt(1, idVacina);
+			ResultSet resultado = stmt.executeQuery();
+			if (resultado.next()) {
+				media = resultado.getDouble("media");
+				System.out.println("media metodo calcular" + media);
+			}
+		} catch (SQLException e) {
+			System.out.println("Erro ao calcular média das avaliações para a vacina com id " + idVacina);
+			System.out.println("Erro: " + e.getMessage());
+		}
 
-	    return media;
+		return media;
 	}
 
-	
-	
 }

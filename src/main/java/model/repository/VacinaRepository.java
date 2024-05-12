@@ -45,40 +45,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 
 		return novaVacina;
 	}
-//	
-//	public Vacina salvar(Vacina novaVacina) {
-//	    String query = "INSERT INTO vacina (NOME, idpais, IDPESQUISADOR, ESTAGIO, DATA_INICIO_PESQUISA, MEDIA) VALUES (?, ?, ?, ?, ?, ?)";
-//	    Connection conn = null;
-//	    PreparedStatement pstmt = null;
-//	    try {
-//	        conn = Banco.getConnection();
-//	        pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-//	        pstmt.setString(1, novaVacina.getNome());
-//	        pstmt.setInt(2, novaVacina.getPais().getId());
-//	        pstmt.setInt(3, novaVacina.getPesquisadorResponsavel().getId());
-//	        pstmt.setString(4, novaVacina.getEstagio().toString());
-//	        pstmt.setDate(5, Date.valueOf(novaVacina.getDataInicioPesquisa()));
-//	        
-//	        // Define a média com um valor padrão de 0.0 se for nula
-//	        Double media = obterMedia(novaVacina.getMedia());
-//	        pstmt.setDouble(6, media);
-//	        
-//	        pstmt.executeUpdate();
-//	        ResultSet resultado = pstmt.getGeneratedKeys();
-//	        
-//	        if (resultado.next()) {
-//	            novaVacina.setId(resultado.getInt(1));
-//	        }
-//	    } catch (SQLException erro) {
-//	        System.out.println("Erro ao executar a query do método salvar Vacina!");
-//	        System.out.println("Erro: " + erro.getMessage());
-//	    } finally {
-//	        Banco.closeResultSet(resultado);
-//	        Banco.closeStatement(pstmt);
-//	        Banco.closeConnection(conn);
-//	    }
-//	    return novaVacina;
-//	}
+
 
 	// Método separado para obter a média, retornando um valor padrão de 0.0 se for nula
 	private Double verificarMedia(Double media) {
@@ -139,7 +106,7 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 	public boolean alterar(Vacina vacinaEditada) {
 		boolean alterou = false;
 		String query = " UPDATE vacina "
-				+ " SET idpesquisador=?, nome=?, idpais=?, estagio=?, data_inicio_pesquisa=?,media=? " + " WHERE id=? ";
+				+ " SET idpesquisador=?, nome=?, idpais=?, estagio=?, data_inicio_pesquisa=?,media=? " + " WHERE idvacina=? ";
 		Connection conn = Banco.getConnection();
 		PreparedStatement stmt = Banco.getPreparedStatementWithPk(conn, query);
 		try {
@@ -148,8 +115,8 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			stmt.setInt(3, vacinaEditada.getPais().getId());
 			stmt.setString(4, vacinaEditada.getEstagio().toString());
 			stmt.setDate(5, Date.valueOf(vacinaEditada.getDataInicioPesquisa()));
-			stmt.setDouble(6, vacinaEditada.getMedia());
-			stmt.setInt(6, vacinaEditada.getId());
+			stmt.setDouble(6, verificarMedia(vacinaEditada.getMedia()));
+			stmt.setInt(7, vacinaEditada.getId());
 
 			stmt.setInt(6, vacinaEditada.getId());
 			alterou = stmt.executeUpdate() > 0;
@@ -302,6 +269,8 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 		String query = " select v.* from vacina v " 
 					+ "	inner join pais p on p.IDPAIS = v.IDPAIS "
 					+ "	inner join pessoa pe on pe.IDPESSOA  = v.IDPESQUISADOR ";
+		
+		
 
 		boolean primeiro = true;
 
@@ -324,6 +293,19 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 			query += " UPPER(p.nome) LIKE UPPER('%" + seletor.getNomePais() + "%') ";
 			primeiro = false;
 
+		}
+		if(seletor.getPesquisadorResponsavel() != null && seletor.getPesquisadorResponsavel().trim().length() > 0) {
+			if(primeiro) {
+				query += " WHERE ";
+			}else {
+				query += " AND ";
+			}
+			query += " upper(pe.nome) LIKE UPPER('%" + seletor.getPesquisadorResponsavel() + "%')";
+			primeiro = false;
+		}
+		if (seletor.temPaginacao()) {
+			query += " LIMIT " + seletor.getLimite();
+			query += " OFFSET " + seletor.getOffset();
 		}
 
 		try {
@@ -354,5 +336,70 @@ public class VacinaRepository implements BaseRepository<Vacina> {
 		}
 		return vacinas;
 	}
+	
+	public int contarTotalRegistros(VacinaSeletor seletor) {
 
+		Connection conn = Banco.getConnection();
+		Statement stmt = Banco.getStatement(conn);
+
+		ResultSet resultado = null;
+		int totalRegistros = 0;
+
+		String query = " select COUNT(v.IDVACINA) from vacina v inner join pais p on v.idpais = p.IDPAIS "
+					 + " inner join pessoa pe on v.idpesquisador = pe.idPESSOA ";
+
+		boolean primeiro = true;
+
+		if (seletor.getNome() != null && seletor.getNome().trim().length() > 0) {
+			if (primeiro) {
+				query += " WHERE ";
+			} else {
+				query += " AND ";
+			}
+			query += " UPPER(v.nome) LIKE UPPER('%" + seletor.getNome() + "%') ";
+			primeiro = false;
+		}
+
+		if (seletor.getNomePais() != null && seletor.getNomePais().trim().length() > 0) {
+			if (primeiro) {
+				query += " WHERE ";
+			} else {
+				query += " AND ";
+			}
+			query += " UPPER(p.nome) LIKE UPPER('%" + seletor.getNomePais() + "%') ";
+			primeiro = false;
+		}
+
+		try{
+			resultado = stmt.executeQuery(query);
+			if(resultado.next()){
+				totalRegistros = resultado.getInt(1);
+			}
+		} catch (SQLException erro){
+			System.out.println("Erro ao contar as vacinas filtradas");
+			System.out.println("Erro: " + erro.getMessage());
+		} finally {
+			Banco.closeResultSet(resultado);
+			Banco.closeStatement(stmt);
+			Banco.closeConnection(conn);
+		}
+		
+		return totalRegistros;
+	}
+
+	
+	public int contarPagina(VacinaSeletor seletor) {
+		int totalPaginas =0;
+		int totalRegistros = this.contarTotalRegistros(seletor);
+		
+		totalPaginas = totalRegistros / seletor.getLimite();
+		int resto = totalRegistros % seletor.getLimite();
+		
+		if (resto > 0){
+			
+			totalPaginas++;
+		}
+		
+		return totalPaginas ;
+	}
 }

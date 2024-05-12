@@ -30,7 +30,7 @@ public class AplicacaoController {
 	}
 
 	@DELETE
-	@Path("/{id}")
+	@Path("excluir/{id}")
 	public boolean excluir(@PathParam("id") int id) {
 		return service.excluir(id);
 	}
@@ -38,6 +38,7 @@ public class AplicacaoController {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
+	@Path("/alterar")
 	public boolean alterar(Aplicacao AplicacaoEditada) throws ControleVacinasException {
 		return service.alterar(AplicacaoEditada);
 	}

@@ -29,7 +29,7 @@ public class VacinaController {
 	}
 
 	@DELETE
-	@Path("/{id}")
+	@Path("/excluir/{id}")
 	public boolean excluir(@PathParam("id") int id) throws ControleVacinasException {
 		return service.excluirVacina(id);
 	}
@@ -37,6 +37,7 @@ public class VacinaController {
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/alterar")
 	public boolean atualizar(Vacina vacinaEditada) {
 		return service.alterar(vacinaEditada);
 	}
@@ -48,7 +49,7 @@ public class VacinaController {
 	}
 
 	@GET
-	@Path("/{id}")
+	@Path("consultar/{id}")
 	public Vacina consultarPorId(@PathParam("id") int id) {
 		return service.consultarPorId(id);
 	}
@@ -59,5 +60,19 @@ public class VacinaController {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Vacina> consultarComFiltro(VacinaSeletor seletor) {
 		return service.consultarComFiltro(seletor);
+	}
+	@POST
+	@Path("/contar")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public int contarTotalRegistros(VacinaSeletor seletor) {
+		return this.service.contarTotalRegistros(seletor);
+	}
+	
+	
+	@POST
+	@Path("/total-paginas")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public int contarPaginas(VacinaSeletor seletor) {
+		return this.service.contarPaginas(seletor);
 	}
 }

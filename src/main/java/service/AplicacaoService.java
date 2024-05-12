@@ -2,15 +2,9 @@ package service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-
 import exception.ControleVacinasException;
 import model.entity.Aplicacao;
-import model.entity.Pessoa;
-import model.entity.Vacina;
-import model.entity.enums.Categoria;
-import model.entity.enums.Estagio;
 import model.repository.AplicacaoRepository;
-import model.repository.PessoaRepository;
 import model.repository.VacinaRepository;
 
 public class AplicacaoService {
@@ -21,11 +15,10 @@ public class AplicacaoService {
 
 	public Aplicacao cadastrarAplicacao(Aplicacao novaAplicacao) throws ControleVacinasException {
 
-		if (novaAplicacao.getIdpessoa() == 0 || novaAplicacao.getVacina() == null
+		if (novaAplicacao.getPessoa()== null || novaAplicacao.getVacina() == null
 				|| novaAplicacao.getVacina().getId() == 0) {
 			throw new ControleVacinasException(
-					"É necessário informar o ID da pessoa e a vacina para realizar a aplicação.");
-
+			"É necessário informar o ID da pessoa e a vacina para realizar a aplicação.");
 		}
 
 		novaAplicacao.setData(LocalDate.now());
@@ -38,7 +31,7 @@ public class AplicacaoService {
 		repositoryVacina.atualizarMediaAvaliacoes(novaAplicacao.getVacina().getId(), mediaAvaliacoes);
 		System.out.println("media service" + mediaAvaliacoes);
 		System.out.println("idvacina" + novaAplicacao.getVacina().getId());
-		
+
 		return repository.salvar(novaAplicacao);
 	}
 
